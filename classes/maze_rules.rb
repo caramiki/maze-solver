@@ -1,74 +1,64 @@
 # The table of instructions
 # This could theoretically be represented as a finite list of conditions
 class MazeRules
+  extend DebugMode
+
   def self.apply(solver, maze)
     current_cell = maze.cells[solver.current_cell]
-    puts "\ncurrent cell: #{solver.current_cell}"
-    puts "\nremaining moves: #{solver.remaining_moves}"
+    puts_if_debug_mode "\ncurrent cell: #{solver.current_cell}"
+    puts_if_debug_mode "remaining moves: #{solver.remaining_moves}"
 
     # Negative remaining moves means moving left
     if solver.remaining_moves < 0
-      puts "move left"
       solver.move_left
     # Positive remaining moves means moving right
     elsif solver.remaining_moves > 0
-      puts "move right"
       solver.move_right
-    elsif outside?(current_cell)
-      puts "outside!"
+    elsif current_cell.outside?
+      puts_if_debug_mode "outside!"
       solver.solved = true
-    elsif impassable?(current_cell)
-      puts "cell is impassable"
-      solver.retrace_steps(current_cell)
+    elsif current_cell.impassable?
+      puts_if_debug_mode "cell is impassable"
+      solver.set_destination(solver.came_from_direction, current_cell)
     else
       # Write info about the last-visited cell in the current cell.
       # e.g. if the last-visited cell was to the north and it was impassable,
-      # add { north: 0 } to our cell hash.
-      #
-      # There are a finite number of combinations of directions and values, so we could theoretically
-      # still represent the cell content with a "symbol" to follow the Turing machine limitations.
-      puts "write came_from to current cell"
+      # set cell's north to 0.
       solver.write(current_cell, solver.came_from)
 
-      if unexplored?(current_cell)
-        puts "current cell is unexplored, marking as explored"
+      if current_cell.unexplored?
+        puts_if_debug_mode "current cell is unexplored, marking as explored"
         solver.write(current_cell, { value: Maze::EXPLORED })
       end
 
-      unexplored_directions = current_cell.unexplored_directions
+      next_direction = next_unexplored_direction(solver, current_cell)
 
-      if unexplored_directions.any?
-        puts "set destination to #{unexplored_directions.first}"
-        solver.set_destination(unexplored_directions.first, current_cell)
+      if next_direction
+        solver.set_destination(next_direction, current_cell)
       else
-        puts "dead end, setting destination #{current_cell.explored_directions.first}"
+        puts_if_debug_mode "current cell is a dead end"
+
         # If we're in a cell that has no unexplored directions, we must have hit a dead-end, so we
         # need to go back to an explored cell and check for unexplored directions there
         solver.write(current_cell, { value: Maze::DEAD_END })
-        solver.set_destination(current_cell.explored_directions.first, current_cell)
+        solver.set_destination(current_cell.explored_direction, current_cell)
       end
     end
   end
 
   private
 
-  def self.impassable?(cell, direction = :value)
-    cell.send(direction) == Maze::IMPASSABLE
-  end
-
-  def self.unexplored?(cell, direction = :value)
-    cell.send(direction) == Maze::UNEXPLORED
-  end
-
-  def self.explored?(cell, direction = :value)
-    cell.send(direction) == Maze::EXPLORED
-  end
-
-  def self.dead_end?(cell, direction = :value)
-    cell.send(direction) == Maze::DEAD_END
-  end
-
-  def self.outside?(cell)
-    cell.value == Maze::OUTSIDE
+  # We'll always try the direction to our right first, then forward, then left.
+  # This guarantees we will never enter an endless loop.
+  def self.next_unexplored_direction(solver, cell)
+    if cell.unexplored?(solver.right)
+      solver.right
+    elsif cell.unexplored?(solver.facing)
+      solver.facing
+    elsif cell.unexplored?(solver.left)
+      solver.left
+    else
+      nil
+    end
   end
 end

@@ -1,21 +1,15 @@
-# cell = {
-#   north: :impassable || :unexplored || :explored || :dead_end,
-#   south: :impassable || :unexplored || :explored || :dead_end,
-#   east:  :impassable || :unexplored || :explored || :dead_end,
-#   west:  :impassable || :unexplored || :explored || :dead_end,
-#   value: :impassable || :unexplored || :explored || :dead_end || :outside
-# }
-
 # A cell of the tape
 class MazeCell
-  attr_accessor :north, :south, :east, :west, :value
+  # There are a finite number of combinations of directions and values, so we could theoretically
+  # still represent the cell content with a "symbol" to follow the Turing machine limitations.
+  attr_accessor :east, :west, :south, :north, :value
 
   def initialize(value)
     @value = value
-    @north = Maze::UNEXPLORED
-    @south = Maze::UNEXPLORED
     @east = Maze::UNEXPLORED
     @west = Maze::UNEXPLORED
+    @south = Maze::UNEXPLORED
+    @north = Maze::UNEXPLORED
   end
 
   # @return [Hash]
@@ -26,20 +20,35 @@ class MazeCell
   # @return [Hash]
   def directions
     {
-      north: north,
-      south: south,
       east: east,
-      west: west
+      west: west,
+      south: south,
+      north: north
     }
   end
 
-  # @return [Array] array of direction symbols
-  def explored_directions
-    directions.select { |_, v| v == Maze::EXPLORED }.keys
+  # @return [Symbol]
+  def explored_direction
+    directions.select { |_, v| v == Maze::EXPLORED }.keys.first
   end
 
-  # @return [Array] array of direction symbols
-  def unexplored_directions
-    directions.select { |_, v| v == Maze::UNEXPLORED }.keys
+  def impassable?(direction = :value)
+    send(direction) == Maze::IMPASSABLE
+  end
+
+  def unexplored?(direction = :value)
+    send(direction) == Maze::UNEXPLORED
+  end
+
+  def explored?(direction = :value)
+    send(direction) == Maze::EXPLORED
+  end
+
+  def dead_end?(direction = :value)
+    send(direction) == Maze::DEAD_END
+  end
+
+  def outside?
+    value == Maze::OUTSIDE
   end
 end

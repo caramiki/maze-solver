@@ -8,6 +8,8 @@
 
 # The Turing machine
 class MazeSolver
+  include DebugMode
+
   # came_from, remaining_moves, and solved are part of the "state" of our Turing machine
   # All of these state attributes have a finite number of values.
   #
@@ -29,10 +31,15 @@ class MazeSolver
     came_from.values.first
   end
 
+  def facing
+    opposite_direction(came_from_direction)
+  end
+
   # Move the head left (a lower index in our cell array).
   # If we are moving left, our remaining moves must be negative, so add 1 so we get closer
   # to zero remaining moves.
   def move_left
+    puts_if_debug_mode "move left"
     self.current_cell -= 1
     self.remaining_moves += 1
   end
@@ -41,17 +48,19 @@ class MazeSolver
   # If we are moving right, our remaining moves must be positive, so subtract 1 so we get closer
   # to zero remaining moves.
   def move_right
+    puts_if_debug_mode "move right"
     self.current_cell += 1
     self.remaining_moves -= 1
   end
 
-  def retrace_steps(cell)
-    puts "going back #{came_from.keys.first}"
-    set_destination(came_from.keys.first, cell)
-  end
-
   def set_destination(direction, cell)
+    puts_if_debug_mode "set destination to #{direction}"
     self.came_from = { "#{opposite_direction(direction)}": cell.value }
+
+    # Tentatively mark the direction we're going in as "explored".
+    # If we're wrong, we'll be coming back to this cell later anyway and
+    # we'll correct it then.
+    write(cell, { "#{direction}": Maze::EXPLORED })
 
     case direction
     when :east
@@ -68,11 +77,15 @@ class MazeSolver
   def write(cell, attrs)
     attrs.each do |key, value|
       cell.send("#{key}=", value)
-      puts "update cell's #{key} to #{value}"
+      puts_if_debug_mode "update cell's #{key} to #{value}"
     end
   end
 
-  private
+  # Get the direction to the left of whatever direction we're facing.
+  # @return [Symbol]
+  def left
+    opposite_direction(right)
+  end
 
   def opposite_direction(direction)
     case direction
@@ -84,6 +97,21 @@ class MazeSolver
       :north
     when :north
       :south
+    end
+  end
+
+  # Get the direction to the right of whatever direction we're facing.
+  # @return [Symbol]
+  def right
+    case facing
+    when :east
+      :south
+    when :west
+      :north
+    when :south
+      :west
+    when :north
+      :east
     end
   end
 end

@@ -1,51 +1,94 @@
+require './concerns/debug_mode'
+
 require './classes/maze_solver'
 require './classes/maze'
 require './classes/maze_cell'
 require './classes/maze_rules'
 require './classes/maze_printer'
 
-maze_data1 = {
-  cells: [
-    0, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1, 1, 0,
-    0, 0, 0, 0, 1, 1, 0, 0,
-    0, 0, 0, 1, 1, 0, 0, 0,
-    0, 0, 1, 1, 0, 0, 0, 0,
-    0, 1, 1, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0,
-    4, 4, 4, 4, 4, 4, 4, 4
-  ],
-  starting_cell: 6
-}
+mazes = [
+  {
+    cells: [
+      0, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 1, 1, 0,
+      0, 0, 0, 0, 1, 1, 0, 0,
+      0, 0, 0, 1, 1, 0, 0, 0,
+      0, 0, 1, 1, 0, 0, 0, 0,
+      0, 1, 1, 0, 0, 0, 0, 0,
+      0, 1, 0, 0, 0, 0, 0, 0,
+      0, 4, 0, 0, 0, 0, 0, 0
+    ],
+    starting_cell: 6
+  },
+  {
+    cells: [
+      0, 1, 0, 0, 0, 0, 0, 0,
+      0, 1, 0, 1, 1, 0, 1, 0,
+      0, 1, 1, 1, 0, 0, 1, 0,
+      0, 0, 0, 1, 1, 0, 1, 0,
+      0, 1, 0, 0, 1, 0, 1, 0,
+      0, 1, 1, 1, 1, 1, 1, 0,
+      0, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 0, 4, 0
+    ],
+    starting_cell: 1
+  },
+  {
+    cells: [
+      0, 0, 0, 0, 0, 0, 1, 0,
+      0, 1, 1, 1, 1, 0, 1, 0,
+      0, 0, 1, 0, 1, 1, 1, 0,
+      0, 1, 1, 1, 0, 1, 0, 0,
+      0, 1, 0, 1, 0, 1, 1, 0,
+      0, 1, 1, 1, 0, 0, 0, 0,
+      0, 1, 0, 1, 1, 1, 1, 4,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ],
+    starting_cell: 6
+  },
+  {
+    cells: [
+      0, 0, 0, 0, 1, 0, 0, 0,
+      0, 1, 1, 1, 1, 1, 1, 0,
+      0, 1, 0, 1, 0, 0, 1, 0,
+      0, 1, 1, 1, 1, 1, 1, 0,
+      0, 1, 0, 0, 1, 0, 1, 0,
+      0, 1, 1, 1, 1, 1, 1, 0,
+      0, 1, 0, 1, 0, 0, 1, 0,
+      0, 0, 0, 4, 0, 0, 0, 0
+    ],
+    starting_cell: 4
+  }
+]
 
-maze_data2 = {
-  cells: [
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 1, 1, 0, 1, 0,
-    0, 1, 1, 1, 0, 0, 1, 0,
-    0, 0, 0, 1, 1, 0, 1, 0,
-    0, 1, 0, 0, 1, 0, 1, 0,
-    0, 1, 1, 1, 1, 1, 1, 0,
-    0, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 0, 1, 0,
-    4, 4, 4, 4, 4, 4, 4, 4
-  ],
-  starting_cell: 1
-};
+maze_num = nil
 
-maze = Maze.new(maze_data2[:cells])
-initial_maze = Maze.new(maze_data2[:cells])
+while !maze_num
+  puts "Choose maze:"
+  puts (1..mazes.length).to_a.join(" - ")
+  maze_num = gets.chomp.to_i
+
+  if maze_num < 0 || maze_num > mazes.length
+    puts "Invalid choice."
+    maze_num = nil
+  end
+end
+
+maze_data = mazes[maze_num - 1]
+maze = Maze.new(maze_data[:cells])
+initial_maze = Maze.new(maze_data[:cells])
 
 solver = MazeSolver.new(
   solved: false,
   remaining_moves: 0,
   came_from: { north: Maze::IMPASSABLE },
-  current_cell: maze_data2[:starting_cell]
+  current_cell: maze_data[:starting_cell]
 )
 
 while !solver.solved
   MazeRules.apply(solver, maze)
+  MazePrinter.print_out(maze, solver.current_cell)
+  sleep 0.01
 end
 
 puts "\nInitial Maze:"
