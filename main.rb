@@ -6,6 +6,8 @@ require './classes/maze_cell'
 require './classes/maze_rules'
 require './classes/maze_printer'
 
+RUN_SPEED = 0.1
+
 mazes = [
   {
     cells: [
@@ -18,7 +20,8 @@ mazes = [
       0, 1, 0, 0, 0, 0, 0, 0,
       0, 4, 0, 0, 0, 0, 0, 0
     ],
-    starting_cell: 6
+    starting_cell: 6,
+    came_from: { north: Maze::IMPASSABLE }
   },
   {
     cells: [
@@ -31,7 +34,8 @@ mazes = [
       0, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 0, 0, 4, 0
     ],
-    starting_cell: 1
+    starting_cell: 1,
+    came_from: { north: Maze::IMPASSABLE }
   },
   {
     cells: [
@@ -44,7 +48,8 @@ mazes = [
       0, 1, 0, 1, 1, 1, 1, 4,
       0, 0, 0, 0, 0, 0, 0, 0
     ],
-    starting_cell: 6
+    starting_cell: 6,
+    came_from: { north: Maze::IMPASSABLE }
   },
   {
     cells: [
@@ -57,7 +62,8 @@ mazes = [
       0, 1, 0, 1, 0, 0, 1, 0,
       0, 0, 0, 4, 0, 0, 0, 0
     ],
-    starting_cell: 4
+    starting_cell: 4,
+    came_from: { north: Maze::IMPASSABLE }
   }
 ]
 
@@ -81,14 +87,14 @@ initial_maze = Maze.new(maze_data[:cells])
 solver = MazeSolver.new(
   solved: false,
   remaining_moves: 0,
-  came_from: { north: Maze::IMPASSABLE },
+  came_from: maze_data[:came_from],
   current_cell: maze_data[:starting_cell]
 )
 
 while !solver.solved
   MazeRules.apply(solver, maze)
   MazePrinter.print_out(maze, solver.current_cell)
-  sleep 0.01
+  sleep RUN_SPEED
 end
 
 puts "\nInitial Maze:"
